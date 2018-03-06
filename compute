@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+
+import re
+def compute_add_sub(arg):
+    '''
+    函数三：加法+ 减法-
+    匹配规格：a+b a-b  a可以为任意数，b可以为任意数
+    :param arg:
+    :return:
+    '''
+    val = arg[0]
+    pattern = re.compile(r'\d+\.?\d*[\+\-]\d+\.?\d*')
+    mch = pattern.search(val)
+    if not mch:
+        return
+
+    # 加减运算，直到没有加/减
+    content = pattern.search(val).group()
+    if len(content.split('+')) > 1:
+        n1 = content.split('+')[0]
+        n2 = content.split('+')[1]
+        value = float(n1) + float(n2)
+
+    elif len(content.split('-')) > 1:
+        n1 = content.split('-')[0]
+        n2 = content.split('-')[1]
+        value = float(n1) - float(n2)
+
+    before = pattern.split(val, 1)[0]
+    after = pattern.split(val, 1)[1]
+    new_str = "%s%s%s" %(before, value, after)
+    arg[0] = new_str
+    compute_add_sub(arg)
