@@ -12,8 +12,7 @@ def compute_add_sub(arg):
     mch = pattern.search(val)
     if not mch:
         return
-
-    # 加减运算，直到没有加/减
+    
     content = pattern.search(val).group()
     if len(content.split('+')) > 1:
         n1 = content.split('+')[0]
