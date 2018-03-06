@@ -4,8 +4,6 @@
 import re
 def compute_add_sub(arg):
     '''
-    函数三：加法+ 减法-
-    匹配规格：a+b a-b  a可以为任意数，b可以为任意数
     :param arg:
     :return:
     '''
