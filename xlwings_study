@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+# -*- coding:utf-8 -*-
+
+
+import xlwings as xw
+
+file_path = r'G:\excel_test.xlsx'
+file_path_new = r'G:\excel_test_new.xlsx'
+app = xw.App(visible=False, add_book=False)
+app.display_alerts=False
+app.screen_updating=False
+
+
+wb = app.books.open(file_path)
+wb_new = app.books.open(file_path_new)
+sht_num = len(wb.sheets)
+
+ll = []
+
+for i in range(0, sht_num):
+    if i >= 0:
+        sht = wb.sheets[i]
+
+        sht_name = wb.sheets[sht]
+        print('sheet name>>', sht_name)
+        info = sht.used_range
+
+        nrows = info.last_cell.row
+        print(nrows)
+        ncolumns = info.last_cell.column
+        print(ncolumns)
+
+        # 被复制的数据
+        my_values = wb.sheets[sht_name].range('A3:D' + str(nrows)).options(ndim=2).value
+
+        # 待粘贴的excel新表
+        sht_name_new = wb_new.sheets['sheet1_new']
+        info_new = sht_name_new.used_range
+
+        # 定位新表的最后行的行号
+        nrows_new = info_new.last_cell.row
+        print('new rows:::: ',nrows_new)
+        nrows_new_num = int(nrows_new + 1)
+
+        ll.append(nrows_new)
+
+        # 定位新表的最后列的列号
+        ncolumns_new = info_new.last_cell.column
+        print('new colums::: ',ncolumns_new)
+        nrows_new_num = int(nrows_new + 1)
+
+        copy_rows = 'A' + str(nrows_new_num)
+        copy_colums = 'D' + str(nrows_new_num)
+
+        # 粘贴数据到新的excel表
+        wb_new.sheets['sheet1_new'].range(copy_rows + ':' + copy_colums).value = my_values
+
+
+
+    else:
+        print('sheet less than 1')
+
+print(ll)
+# 合并单元格
+#for j in range(len(ll)):
+    #print(j)
+    #meger_row_start_num = ll[j]
+    #print('start row >> ',meger_row_start_num)
+    #meger_row_end_num = ll[j + 1]
+    #print('end row >> ', meger_row_end_num)
+
+    #meger_row_start = 'A' + str(meger_row_start_num)
+    #meger_row_end = 'A' + str(meger_row_end_num)
+    #wb_new.sheets['sheet1_new'].range(meger_row_start + ':' + meger_row_end).api.merge
+
+
+# 保存比关闭被复制的表
+wb.save()
+wb.close()
+
+# 保存并关闭新的excel表
+wb_new.save()
+wb_new.close()
+
+app.quit()
+
+
+
+
