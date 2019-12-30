@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 
-
 import xlwings as xw
-
-file_path_copy = r'G:\excel_test.xlsx'
-file_path_paste = r'G:\excel_test_new.xlsx'
 
 class excel_handle():
     def __init__(self, file_path_copy, file_path_paste):
@@ -20,6 +16,7 @@ class excel_handle():
         
         # 自定义: 粘贴的sheet名
         sheet_name_paste = r'sheet_paste'
+        sht_name_paste = wb_paste.sheet[sheet_name_paste]
         
         # 被复制的excel表的sheet数
         sht_copy_num = len(wb_copy.sheets)
@@ -42,8 +39,7 @@ class excel_handle():
                 copy_data = wb_copy.sheets[sht_copy_name].range('A3:C' + str(nrows_copy)).options(ndim=2).value
                 
                 ############################################
-                # 待粘贴的excel新表
-                sht_name_paste = wb_paste.sheets[sheet_name_paste]
+                # 取待粘贴的excel新表的行号
                 info_paste = sht_name_paste.used_range
 
                 # 定位新表(待粘贴)的最后行的行号
@@ -59,7 +55,7 @@ class excel_handle():
                 paste_colums = 'D' + str(nrows_paste_end)
 
                 # 粘贴数据到新的excel表
-                wb_paste.sheets[sheet_name_paste].range(paste_rows + ':' + paste_colums).value = copy_data
+                sht_name_paste.range(paste_rows + ':' + paste_colums).value = copy_data
                 
                 ##################################################
                 # A列: 指定行号合并
@@ -70,37 +66,56 @@ class excel_handle():
                 rows_meger_end = 'A' + str(nrows_paste_end)
 
                 # 在每个合并开始的单元格的写上对应的表名
-                wb_paste.sheets[sheet_name_paste].range(rows_meger_start).value = sht_copy_name
+                sht_name_paste.range(rows_meger_start).value = sht_copy_name
                 
                 # 合并A列单元格
-                wb_paste.sheets[sheet_name_paste].range(rows_meger_start + ':' + rows_meger_end).api.meger()
+                sht_name_paste.range(rows_meger_start + ':' + rows_meger_end).api.meger()
 
             else:
                 print('copy book sheet is None')
+        
+        ###################################
+        # 新表字体和背景颜色处理
+        # 粘贴完数据后, 取新的表最后一行行号
+        info_paste_new = sht_name_paste.last_cell.row
+        
+        # 定位新表的最后行的行号
+        nrows_paste_end_new = info_paste_new.last_cell.row
+        
+        # 字体和背景颜色处理
+        for i_new in range(3, nrows_paste_end_new):
+            c_colums_value = sht_name_paste.range('D' + str(i_new)).value
+            row_new = 'B{d_row}:D{d_row}'.format(d_row=i_new)
+            
+            if c_colums_value == 'xxx':
+                sht_name_paste.range(row_new).api.Font.Color = 0x0000ff
+                sht_name_paste.range(row_new).color = (255, 255, 0)
+        
+        # 边框处理
+        a_range = 'A3:D{d_row_new}'.format(d_row_new=nrows_paste_end_new)
+        sht_name_paste.range(a_range).api.Borders(8).LineStyle = 1  # Top border
+        sht_name_paste.range(a_range).api.Borders(9).LineStyle = 1  # Bottom border
+        sht_name_paste.range(a_range).api.Borders(7).LineStyle = 1  # Left border
+        sht_name_paste.range(a_range).api.Borders(10).LineStyle = 1  # Right border
+        sht_name_paste.range(a_range).api.Borders(12).LineStyle = 1  # Inside horizontal border
+        sht_name_paste.range(a_range).api.Borders(11).LineStyle = 1  # Inner vertical border
 
-print(ll)
-# 合并单元格
-#for j in range(len(ll)):
-    #print(j)
-    #meger_row_start_num = ll[j]
-    #print('start row >> ',meger_row_start_num)
-    #meger_row_end_num = ll[j + 1]
-    #print('end row >> ', meger_row_end_num)
 
-    #meger_row_start = 'A' + str(meger_row_start_num)
-    #meger_row_end = 'A' + str(meger_row_end_num)
-    #wb_new.sheets['sheet1_new'].range(meger_row_start + ':' + meger_row_end).api.merge
+        # 保存比关闭被复制的表
+        wb_copy.save()
+        wb_copy.close()
 
+        # 保存并关闭新的excel表
+        wb_paste.save()
+        wb_paste.close()
 
-# 保存比关闭被复制的表
-wb.save()
-wb.close()
-
-# 保存并关闭新的excel表
-wb_new.save()
-wb_new.close()
-
-app.quit()
+        self.excel_app.quit()
+        
+if __name__ == '__main__':
+    file_path_copy = r'G:\excel_test.xlsx'
+    file_path_paste = r'G:\excel_test_new.xlsx'
+    eh = excel_handle(file_path_copy, file_path_paste)
+    eh.data_handle()    
 
 
 
