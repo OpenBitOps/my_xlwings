@@ -4,61 +4,79 @@
 
 import xlwings as xw
 
-file_path = r'G:\excel_test.xlsx'
-file_path_new = r'G:\excel_test_new.xlsx'
-app = xw.App(visible=False, add_book=False)
-app.display_alerts=False
-app.screen_updating=False
+file_path_copy = r'G:\excel_test.xlsx'
+file_path_paste = r'G:\excel_test_new.xlsx'
 
+class excel_handle():
+    def __init__(self, file_path_copy, file_path_paste):
+        self.execl_app = xw.App(visible=True, add_book=False)
+        self.wb_copy = self.excel_app.books.open(file_path_copy)
+        self.wb_paste = self.excel_app.books.open(file_path_paste)
 
-wb = app.books.open(file_path)
-wb_new = app.books.open(file_path_new)
-sht_num = len(wb.sheets)
+    def data_handle(self):
+        
+        wb_copy = self.wb_copy
+        wb_paste = self.wb_paste
+        
+        # 自定义: 粘贴的sheet名
+        sheet_name_paste = r'sheet_paste'
+        
+        # 被复制的excel表的sheet数
+        sht_copy_num = len(wb_copy.sheets)
+        
+        # copy数据到新表
+        for i in range(0, sht_copy_num):
+            if i >= 0:
+                sht_copy = wb_copy.sheets[i]
+                
+                # 被复制的表名
+                sht_copy_name_cl = wb_copy.sheets[sht_copy]
+                sht_copy_name = sht_copy_name_cl.name
+                
+                info_copy = sht_copy.used_range
+                
+                # 被复制sheet的最后一行行号
+                nrows_copy = info_copy.last_cell.row
 
-ll = []
+                # 被复制的数据
+                copy_data = wb_copy.sheets[sht_copy_name].range('A3:C' + str(nrows_copy)).options(ndim=2).value
+                
+                ############################################
+                # 待粘贴的excel新表
+                sht_name_paste = wb_paste.sheets[sheet_name_paste]
+                info_paste = sht_name_paste.used_range
 
-for i in range(0, sht_num):
-    if i >= 0:
-        sht = wb.sheets[i]
+                # 定位新表(待粘贴)的最后行的行号
+                nrows_paste = info_paste.last_cell.row
+                
+                # 开始粘贴的行号
+                nrows_paste_start = int(nrows_paste + 1)
+                
+                # 结束粘贴的行号
+                nrows_paste_end = nrows_paste_start + nrows_paste - 3
+                
+                paste_rows = 'B' + str(nrows_paste_start)
+                paste_colums = 'D' + str(nrows_paste_end)
 
-        sht_name = wb.sheets[sht]
-        print('sheet name>>', sht_name)
-        info = sht.used_range
+                # 粘贴数据到新的excel表
+                wb_paste.sheets[sheet_name_paste].range(paste_rows + ':' + paste_colums).value = copy_data
+                
+                ##################################################
+                # A列: 指定行号合并
+                # 合并的开始行号
+                rows_meger_start = 'A' + str(nrows_paste_start)
+                
+                # 合并的结束行号
+                rows_meger_end = 'A' + str(nrows_paste_end)
 
-        nrows = info.last_cell.row
-        print(nrows)
-        ncolumns = info.last_cell.column
-        print(ncolumns)
+                # 在每个合并开始的单元格的写上对应的表名
+                wb_paste.sheets[sheet_name_paste].range(rows_meger_start).value = sht_copy_name
+                
+                # 合并A列单元格
+                wb_paste.sheets[sheet_name_paste].range(rows_meger_start + ':' + rows_meger_end).api.meger()
 
-        # 被复制的数据
-        my_values = wb.sheets[sht_name].range('A3:D' + str(nrows)).options(ndim=2).value
-
-        # 待粘贴的excel新表
-        sht_name_new = wb_new.sheets['sheet1_new']
-        info_new = sht_name_new.used_range
-
-        # 定位新表的最后行的行号
-        nrows_new = info_new.last_cell.row
-        print('new rows:::: ',nrows_new)
-        nrows_new_num = int(nrows_new + 1)
-
-        ll.append(nrows_new)
-
-        # 定位新表的最后列的列号
-        ncolumns_new = info_new.last_cell.column
-        print('new colums::: ',ncolumns_new)
-        nrows_new_num = int(nrows_new + 1)
-
-        copy_rows = 'A' + str(nrows_new_num)
-        copy_colums = 'D' + str(nrows_new_num)
-
-        # 粘贴数据到新的excel表
-        wb_new.sheets['sheet1_new'].range(copy_rows + ':' + copy_colums).value = my_values
-
-
-
-    else:
-        print('sheet less than 1')
+            else:
+                print('copy book sheet is None')
 
 print(ll)
 # 合并单元格
